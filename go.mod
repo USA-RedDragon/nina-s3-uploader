@@ -3,6 +3,7 @@ module github.com/USA-RedDragon/nina-s3-uploader
 go 1.23.4
 
 require (
+	github.com/lmittmann/tint v1.0.5
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	gopkg.in/yaml.v3 v3.0.1

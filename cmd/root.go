@@ -3,8 +3,10 @@ package cmd
 import (
 	"fmt"
 	"log/slog"
+	"os"
 
 	"github.com/USA-RedDragon/nina-s3-uploader/internal/config"
+	"github.com/lmittmann/tint"
 	"github.com/spf13/cobra"
 )
 
@@ -25,23 +27,25 @@ func NewCommand(version, commit string) *cobra.Command {
 }
 
 func runRoot(cmd *cobra.Command, _ []string) error {
-	slog.Info("N.I.N.A S3 Uploader", "version", cmd.Annotations["version"], "commit", cmd.Annotations["commit"])
+	fmt.Printf("N.I.N.A S3 Uploader - %s (%s)\n", cmd.Annotations["version"], cmd.Annotations["commit"])
 
 	cfg, err := config.LoadConfig(cmd)
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
+	var logger *slog.Logger
 	switch cfg.LogLevel {
 	case config.LogLevelDebug:
-		slog.SetLogLoggerLevel(slog.LevelDebug)
+		logger = slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug}))
 	case config.LogLevelInfo:
-		slog.SetLogLoggerLevel(slog.LevelInfo)
+		logger = slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelInfo}))
 	case config.LogLevelWarn:
-		slog.SetLogLoggerLevel(slog.LevelWarn)
+		logger = slog.New(tint.NewHandler(os.Stderr, &tint.Options{Level: slog.LevelWarn}))
 	case config.LogLevelError:
-		slog.SetLogLoggerLevel(slog.LevelError)
+		logger = slog.New(tint.NewHandler(os.Stderr, &tint.Options{Level: slog.LevelError}))
 	}
+	slog.SetDefault(logger)
 
 	err = cfg.Validate()
 	if err != nil {

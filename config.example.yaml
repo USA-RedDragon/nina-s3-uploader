@@ -2,4 +2,4 @@
 # Copy this file to config.yaml and modify it to suit your needs.
 
 # Log configuration, one of debug, info, warn, error
-log_level: info
+log-level: info
