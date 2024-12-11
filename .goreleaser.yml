@@ -1,0 +1,36 @@
+---
+project_name: nina-s3-uploader
+
+release:
+  extra_files:
+    - glob: ./LICENSE
+  github:
+    owner: USA-RedDragon
+    name: nina-s3-uploader
+
+builds:
+  - main: .
+    binary: nina-s3-uploader
+    goos:
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm
+      - arm64
+      - riscv64
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: riscv64
+    goarm:
+      - "6"
+      - "7"
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+
+milestones:
+  - close: true

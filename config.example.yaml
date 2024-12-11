@@ -1,0 +1,5 @@
+# This is an example configuration file for the N.I.N.A S3 Uploader
+# Copy this file to config.yaml and modify it to suit your needs.
+
+# Log configuration, one of debug, info, warn, error
+log_level: info
