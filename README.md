@@ -2,9 +2,7 @@
 
 This project is a simple Go program that will watch for files in a directory and upload them to an S3 bucket. It is designed to be used with the [N.I.N.A.](https://nighttime-imaging.eu/) astrophotography software, but can be used with any software that can save files to a directory.
 
-It is designed to only remove the previous file after the new file has been uploaded. This is to prevent the file from being deleted from the disk before N.I.N.A. or the user is done with it.
-
-On Windows, I use this with WinFsp MemFs (particularly <https://github.com/Ceiridge/WinFsp-MemFs-Extended>) to create a virtual drive that N.I.N.A. can save files to. This program watches that directory and uploads the files to S3.
+On Windows, I use this with WinFsp MemFs (particularly <https://github.com/Ceiridge/WinFsp-MemFs-Extended>) to create a virtual drive that N.I.N.A. can save files to. This program watches that directory and uploads the files to S3. This allows me to use a much smaller disk and prevents excessive writes as my system is deployed at a remote observatory.
 
 ## Configuration
 
