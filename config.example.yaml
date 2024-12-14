@@ -7,10 +7,6 @@ log-level: info
 s3:
   # The region to use
   region: us-east-1
-  # The access key ID
-  access-key-id: YOUR_ACCESS_KEY_ID
-  # The secret access key
-  secret-access-key: YOUR_SECRET_ACCESS_KEY
   # The bucket to upload to
   bucket: YOUR_BUCKET_NAME
   # The prefix to use for the uploaded files
