@@ -31,8 +31,6 @@ type Config struct {
 
 type S3 struct {
 	Region          string `json:"region" yaml:"region"`
-	AccessKeyID     string `json:"access-key-id" yaml:"access-key-id"`
-	SecretAccessKey string `json:"secret-access-key" yaml:"secret-access-key"`
 	Bucket          string `json:"bucket" yaml:"bucket"`
 	Prefix          string `json:"prefix" yaml:"prefix"`
 	Endpoint        string `json:"endpoint" yaml:"endpoint"`
@@ -62,8 +60,6 @@ const (
 	keyLogLevel   = "log-level"
 
 	keyS3Region          = "s3.region"
-	keyS3AccessKeyID     = "s3.access-key-id"
-	keyS3SecretAccessKey = "s3.secret-access-key"
 	keyS3Bucket          = "s3.bucket"
 	keyS3Prefix          = "s3.prefix"
 	keyS3Endpoint        = "s3.endpoint"
@@ -75,8 +71,6 @@ const (
 
 var (
 	ErrInvalidLogLevel           = errors.New("Invalid log level")
-	ErrMissingAWSAccessKeyID     = errors.New("Missing AWS access key ID")
-	ErrMissingAWSSecretAccessKey = errors.New("Missing AWS secret access key")
 	ErrMissingS3Bucket           = errors.New("Missing S3 bucket")
 	ErrMissingUploaderDirectory  = errors.New("Missing uploader directory")
 	ErrMissingUploaderExtensions = errors.New("Missing uploader extensions")
@@ -163,12 +157,6 @@ func (c *Config) Validate() error {
 	case LogLevelDebug, LogLevelInfo, LogLevelWarn, LogLevelError:
 	default:
 		return ErrInvalidLogLevel
-	}
-	if c.S3.AccessKeyID == "" {
-		return ErrMissingAWSAccessKeyID
-	}
-	if c.S3.SecretAccessKey == "" {
-		return ErrMissingAWSSecretAccessKey
 	}
 	if c.S3.Bucket == "" {
 		return ErrMissingS3Bucket
