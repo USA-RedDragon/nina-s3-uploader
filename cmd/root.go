@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"syscall"
 
 	"github.com/USA-RedDragon/nina-s3-uploader/internal/config"
+	"github.com/USA-RedDragon/nina-s3-uploader/internal/manager"
 	"github.com/lmittmann/tint"
 	"github.com/spf13/cobra"
+	"github.com/ztrue/shutdown"
 )
 
 func NewCommand(version, commit string) *cobra.Command {
@@ -51,6 +54,29 @@ func runRoot(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return fmt.Errorf("config validation failed: %w", err)
 	}
+
+	manager, err := manager.NewManager(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to create manager: %w", err)
+	}
+	err = manager.Start()
+	if err != nil {
+		return fmt.Errorf("failed to start manager: %w", err)
+	}
+
+	stop := func(_ os.Signal) {
+		// Skip a line so the control characters don't mess up the output
+		fmt.Println("")
+		slog.Info("Shutting down")
+
+		err := manager.Stop()
+		if err != nil {
+			slog.Error("Shutdown error", "error", err.Error())
+		}
+		slog.Info("Shutdown complete")
+	}
+	shutdown.AddWithParam(stop)
+	shutdown.Listen(syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM, syscall.SIGQUIT)
 
 	return nil
 }

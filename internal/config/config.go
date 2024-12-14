@@ -24,20 +24,63 @@ const (
 // Config stores the application configuration.
 type Config struct {
 	LogLevel LogLevel `json:"log-level" yaml:"log-level"`
+
+	S3       S3       `json:"s3" yaml:"s3"`
+	Uploader Uploader `json:"uploader" yaml:"uploader"`
+}
+
+type S3 struct {
+	Region          string `json:"region" yaml:"region"`
+	AccessKeyID     string `json:"access-key-id" yaml:"access-key-id"`
+	SecretAccessKey string `json:"secret-access-key" yaml:"secret-access-key"`
+	Bucket          string `json:"bucket" yaml:"bucket"`
+	Prefix          string `json:"prefix" yaml:"prefix"`
+	Endpoint        string `json:"endpoint" yaml:"endpoint"`
+}
+
+type Uploader struct {
+	Directory  string   `json:"directory" yaml:"directory"`
+	Extensions []string `json:"extensions" yaml:"extensions"`
+	Local      Local    `json:"local" yaml:"local"`
+}
+
+type Local struct {
+	Directory string `json:"directory" yaml:"directory"`
 }
 
 const (
 	defaultConfigPath = "config.yaml"
 	defaultLogLevel   = LogLevelInfo
+
+	defaultS3Region   = "us-east-1"
+	defaultS3Prefix   = "/"
+	defaultS3Endpoint = "s3.amazonaws.com"
 )
 
 const (
 	keyConfigFile = "config"
 	keyLogLevel   = "log-level"
+
+	keyS3Region          = "s3.region"
+	keyS3AccessKeyID     = "s3.access-key-id"
+	keyS3SecretAccessKey = "s3.secret-access-key"
+	keyS3Bucket          = "s3.bucket"
+	keyS3Prefix          = "s3.prefix"
+	keyS3Endpoint        = "s3.endpoint"
+
+	keyUploaderDirectory      = "uploader.directory"
+	keyUploaderExtensions     = "uploader.extensions"
+	keyUploaderLocalDirectory = "uploader.local.directory"
 )
 
 var (
-	ErrInvalidLogLevel = errors.New("Invalid log level")
+	ErrInvalidLogLevel           = errors.New("Invalid log level")
+	ErrMissingAWSAccessKeyID     = errors.New("Missing AWS access key ID")
+	ErrMissingAWSSecretAccessKey = errors.New("Missing AWS secret access key")
+	ErrMissingS3Bucket           = errors.New("Missing S3 bucket")
+	ErrMissingUploaderDirectory  = errors.New("Missing uploader directory")
+	ErrMissingUploaderExtensions = errors.New("Missing uploader extensions")
+	ErrMissingUploaderLocalDir   = errors.New("Missing uploader local directory")
 )
 
 func LoadConfig(cmd *cobra.Command) (*Config, error) {
@@ -85,6 +128,15 @@ func LoadConfig(cmd *cobra.Command) (*Config, error) {
 	if config.LogLevel == "" {
 		config.LogLevel = defaultLogLevel
 	}
+	if config.S3.Region == "" {
+		config.S3.Region = defaultS3Region
+	}
+	if config.S3.Prefix == "" {
+		config.S3.Prefix = defaultS3Prefix
+	}
+	if config.S3.Endpoint == "" {
+		config.S3.Endpoint = defaultS3Endpoint
+	}
 
 	return &config, nil
 }
@@ -111,6 +163,24 @@ func (c *Config) Validate() error {
 	case LogLevelDebug, LogLevelInfo, LogLevelWarn, LogLevelError:
 	default:
 		return ErrInvalidLogLevel
+	}
+	if c.S3.AccessKeyID == "" {
+		return ErrMissingAWSAccessKeyID
+	}
+	if c.S3.SecretAccessKey == "" {
+		return ErrMissingAWSSecretAccessKey
+	}
+	if c.S3.Bucket == "" {
+		return ErrMissingS3Bucket
+	}
+	if c.Uploader.Directory == "" {
+		return ErrMissingUploaderDirectory
+	}
+	if len(c.Uploader.Extensions) == 0 {
+		return ErrMissingUploaderExtensions
+	}
+	if c.Uploader.Local.Directory == "" {
+		return ErrMissingUploaderLocalDir
 	}
 
 	return nil

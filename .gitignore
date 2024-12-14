@@ -1,1 +1,4 @@
 config.yaml
+test-dir/
+test-local-dir/
+nina-s3-uploader*
