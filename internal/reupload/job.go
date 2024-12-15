@@ -18,9 +18,12 @@ type reuploadJob struct {
 	attempts uint64
 }
 
-func (r *reuploadJob) Run() error {
+func (r *reuploadJob) Run(callback func(path string)) error {
 	r.started = true
-	defer func() { r.stopped = true }()
+	defer func() {
+		r.stopped = true
+		callback(r.path)
+	}()
 	for r.started {
 		err := r.uploader.Upload(r.path)
 		if err != nil {
@@ -43,6 +46,7 @@ func (r *reuploadJob) Run() error {
 			slog.Error("failed to remove file from local directory", "path", r.path, "error", err)
 			return err
 		}
+		return nil
 	}
 	return nil
 }
