@@ -21,7 +21,7 @@ type Watcher struct {
 	debounces *xsync.MapOf[string, time.Time]
 }
 
-var badDirs = []*regexp.Regexp{
+var BadDirs = []*regexp.Regexp{
 	regexp.MustCompile("System Volume Information(\\.*)?"),
 	regexp.MustCompile("lost+found(/.*)?"),
 	regexp.MustCompile("\\$RECYCLE.BIN(\\.*)?"),
@@ -148,7 +148,7 @@ func walkdir(dir string) ([]string, error) {
 			} else if os.IsPermission(err) {
 				return filepath.SkipDir
 			}
-			for _, badDir := range badDirs {
+			for _, badDir := range BadDirs {
 				if badDir.MatchString(d.Name()) {
 					return filepath.SkipDir
 				}

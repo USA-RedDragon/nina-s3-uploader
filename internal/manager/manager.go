@@ -248,8 +248,15 @@ func copyFile(src, dst string) error {
 func findFiles(path string, extensions []string) []string {
 	var files []string
 	err := filepath.Walk(path, func(path string, info fs.FileInfo, err error) error {
-		if err != nil {
+		if err != nil && !os.IsPermission(err) {
 			return err
+		} else if os.IsPermission(err) {
+			return filepath.SkipDir
+		}
+		for _, badDir := range watcher.BadDirs {
+			if badDir.MatchString(path) {
+				return filepath.SkipDir
+			}
 		}
 		if !info.IsDir() && slices.Contains(extensions, filepath.Ext(path)) {
 			files = append(files, path)
