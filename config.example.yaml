@@ -12,7 +12,7 @@ s3:
   # The prefix to use for the uploaded files
   prefix: /
   # The endpoint to use
-  endpoint: s3.amazonaws.com
+  endpoint: https://s3.amazonaws.com
 
 uploader:
   # The directory to watch for new files

@@ -30,10 +30,10 @@ type Config struct {
 }
 
 type S3 struct {
-	Region          string `json:"region" yaml:"region"`
-	Bucket          string `json:"bucket" yaml:"bucket"`
-	Prefix          string `json:"prefix" yaml:"prefix"`
-	Endpoint        string `json:"endpoint" yaml:"endpoint"`
+	Region   string `json:"region" yaml:"region"`
+	Bucket   string `json:"bucket" yaml:"bucket"`
+	Prefix   string `json:"prefix" yaml:"prefix"`
+	Endpoint string `json:"endpoint" yaml:"endpoint"`
 }
 
 type Uploader struct {
@@ -59,10 +59,10 @@ const (
 	keyConfigFile = "config"
 	keyLogLevel   = "log-level"
 
-	keyS3Region          = "s3.region"
-	keyS3Bucket          = "s3.bucket"
-	keyS3Prefix          = "s3.prefix"
-	keyS3Endpoint        = "s3.endpoint"
+	keyS3Region   = "s3.region"
+	keyS3Bucket   = "s3.bucket"
+	keyS3Prefix   = "s3.prefix"
+	keyS3Endpoint = "s3.endpoint"
 
 	keyUploaderDirectory      = "uploader.directory"
 	keyUploaderExtensions     = "uploader.extensions"

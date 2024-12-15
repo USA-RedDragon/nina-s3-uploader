@@ -29,7 +29,13 @@ func (r *reuploadJob) Run() error {
 			r.attempts++
 			randomJitter := time.Duration(rand.Intn(5))*time.Minute + time.Duration(rand.Intn(60))*time.Second
 			slog.Debug("sleeping before retrying", "duration", randomJitter)
-			time.Sleep(randomJitter)
+			// divide randomJitter up so we can check if we should stop
+			for i := 0; i < 100 && r.started; i++ {
+				time.Sleep(randomJitter / 100)
+				if !r.started {
+					return nil
+				}
+			}
 			continue
 		}
 		err = os.Remove(r.path)
@@ -37,8 +43,6 @@ func (r *reuploadJob) Run() error {
 			slog.Error("failed to remove file from local directory", "path", r.path, "error", err)
 			return err
 		}
-
-		return nil
 	}
 	return nil
 }

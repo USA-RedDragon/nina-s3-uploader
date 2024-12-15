@@ -36,7 +36,8 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 		return nil, fmt.Errorf("failed to create source watcher: %w", err)
 	}
 	// TODO: walk the local directory and startup reupload jobs for each file
-	uploader := uploader.NewUploader(cfg)
+	// TODO: walk the source directory and upload each file
+	uploader, err := uploader.NewUploader(cfg)
 	return &Manager{
 		config:        cfg,
 		srcWatcher:    watcher,
@@ -132,11 +133,13 @@ func (u *Manager) uploadCallback(path string) {
 		u.reuploadQueue.Add(localPath)
 		return
 	}
+	slog.Info("uploaded", "path", path)
 	// File uploaded successfully, remove it
 	err = os.Remove(path)
 	if err != nil {
 		slog.Error("failed to remove file", "path", path, "error", err)
 	}
+	slog.Info("removed local copy of file", "path", path)
 }
 
 func copyFile(src, dst string) error {
