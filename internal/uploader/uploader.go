@@ -48,7 +48,12 @@ func (u *Uploader) Upload(path string) error {
 			s3Client: u.s3Client,
 			config:   u.config,
 		}
-		return u.upload.Run()
+		err := u.upload.Run()
+		u.upload = nil
+		if err != nil {
+			return fmt.Errorf("failed to upload file: %w", err)
+		}
+		return nil
 	} else {
 		return fmt.Errorf("upload already in progress")
 	}
