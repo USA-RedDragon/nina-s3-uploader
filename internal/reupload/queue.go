@@ -24,8 +24,12 @@ func NewReuploadQueue(config *config.Config, uploader *uploader.Uploader) *Reupl
 func (r *ReuploadQueue) Add(path string) {
 	job, loaded := r.reuploads.LoadOrStore(path, reuploadJob{path: path, uploader: r.uploader})
 	if !loaded {
-		go job.Run()
+		go job.Run(r.callback)
 	}
+}
+
+func (r *ReuploadQueue) callback(path string) {
+	r.reuploads.Delete(path)
 }
 
 func (r *ReuploadQueue) Stop() error {
