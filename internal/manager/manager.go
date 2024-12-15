@@ -93,6 +93,12 @@ func (u *Manager) uploadCallback(path string) {
 			return
 		}
 
+		err = os.MkdirAll(localPath, fs.FileMode(0755))
+		if err != nil {
+			slog.Error("failed to create local directory", "path", path, "error", err)
+			return
+		}
+
 		uploaderDirAbsPath, err := filepath.Abs(u.config.Uploader.Directory)
 		if err != nil {
 			slog.Error("failed to resolve absolute path", "path", path, "error", err)
