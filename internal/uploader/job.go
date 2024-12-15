@@ -5,6 +5,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/USA-RedDragon/nina-s3-uploader/internal/config"
@@ -25,6 +26,15 @@ func (u *uploadJob) Run() error {
 		return err
 	}
 	defer file.Close()
+	if strings.HasPrefix(u.path, u.config.Uploader.Local.Directory) {
+		u.path = strings.TrimPrefix(u.path, u.config.Uploader.Local.Directory)
+	} else if strings.HasPrefix(u.path, u.config.Uploader.Directory) {
+		u.path = strings.TrimPrefix(u.path, u.config.Uploader.Directory)
+	} else {
+		slog.Error("file path does not match local or source directory", "path", u.path)
+		return nil
+	}
+
 	slog.Debug("uploading file", "path", u.path, "bucket", u.config.S3.Bucket, "prefix", u.config.S3.Prefix)
 	_, err = u.s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket: aws.String(u.config.S3.Bucket),
@@ -42,5 +52,6 @@ func (u *uploadJob) Run() error {
 			return err
 		}
 	}
+	slog.Debug("uploaded file", "path", u.path, "bucket", u.config.S3.Bucket, "prefix", u.config.S3.Prefix)
 	return nil
 }
