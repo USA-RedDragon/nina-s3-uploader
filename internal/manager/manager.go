@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"github.com/USA-RedDragon/nina-s3-uploader/internal/config"
@@ -35,16 +36,31 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create source watcher: %w", err)
 	}
-	// TODO: walk the local directory and startup reupload jobs for each file
-	// TODO: walk the source directory and upload each file
 	uploader, err := uploader.NewUploader(cfg)
-	return &Manager{
+	reuploadQueue := reupload.NewReuploadQueue(cfg, uploader)
+
+	manager := &Manager{
 		config:        cfg,
 		srcWatcher:    watcher,
 		uploader:      uploader,
+		reuploadQueue: reuploadQueue,
 		localWatcher:  localWatcher,
-		reuploadQueue: reupload.NewReuploadQueue(cfg, uploader),
-	}, nil
+	}
+
+	// TODO: walk the local directory and startup reupload jobs for each file
+	// TODO: walk the source directory and upload each file
+	foundFiles := findFiles(cfg.Uploader.Local.Directory, cfg.Uploader.Extensions)
+	for _, file := range foundFiles {
+		slog.Info("found file in local directory", "path", file)
+		reuploadQueue.Add(file)
+	}
+	foundFiles = findFiles(cfg.Uploader.Directory, cfg.Uploader.Extensions)
+	for _, file := range foundFiles {
+		slog.Info("found file in source directory", "path", file)
+		manager.uploadCallback(file)
+	}
+
+	return manager, nil
 }
 
 func (u *Manager) Start() error {
@@ -59,9 +75,34 @@ func (u *Manager) Start() error {
 
 func (u *Manager) Stop() error {
 	errgroup := errgroup.Group{}
-	errgroup.Go(u.srcWatcher.Stop)
-	errgroup.Go(u.localWatcher.Stop)
-	errgroup.Go(u.reuploadQueue.Stop)
+	errgroup.Go(func() error {
+		slog.Debug("stopping source watcher")
+		defer slog.Debug("stopped source watcher")
+		err := u.srcWatcher.Stop()
+		if err != nil {
+			return fmt.Errorf("failed to stop source watcher: %w", err)
+		}
+		return nil
+	})
+	errgroup.Go(func() error {
+		slog.Debug("stopping local watcher")
+		defer slog.Debug("stopped local watcher")
+		err := u.localWatcher.Stop()
+		if err != nil {
+			return fmt.Errorf("failed to stop local watcher: %w", err)
+		}
+		return nil
+	})
+
+	errgroup.Go(func() error {
+		slog.Debug("stopping reupload queue")
+		defer slog.Debug("stopped reupload queue")
+		err := u.reuploadQueue.Stop()
+		if err != nil {
+			return fmt.Errorf("failed to stop reupload queue: %w", err)
+		}
+		return nil
+	})
 	return errgroup.Wait()
 }
 
@@ -202,4 +243,21 @@ func copyFile(src, dst string) error {
 		}
 	}
 	return nil
+}
+
+func findFiles(path string, extensions []string) []string {
+	var files []string
+	err := filepath.Walk(path, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && slices.Contains(extensions, filepath.Ext(path)) {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		slog.Error("failed to walk directory", "path", path, "error", err)
+	}
+	return files
 }
