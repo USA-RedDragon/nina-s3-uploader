@@ -52,12 +52,12 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 	foundFiles := findFiles(cfg.Uploader.Local.Directory, cfg.Uploader.Extensions)
 	for _, file := range foundFiles {
 		slog.Info("found file in local directory", "path", file)
-		reuploadQueue.Add(file)
+		go reuploadQueue.Add(file)
 	}
 	foundFiles = findFiles(cfg.Uploader.Directory, cfg.Uploader.Extensions)
 	for _, file := range foundFiles {
 		slog.Info("found file in source directory", "path", file)
-		manager.uploadCallback(file)
+		go manager.uploadCallback(file)
 	}
 
 	return manager, nil
