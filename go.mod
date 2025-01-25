@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.74.1
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/lmittmann/tint v1.0.6
-	github.com/puzpuzpuz/xsync/v3 v3.4.1
+	github.com/puzpuzpuz/xsync/v3 v3.5.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/ztrue/shutdown v0.1.1
