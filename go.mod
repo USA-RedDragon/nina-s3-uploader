@@ -6,7 +6,7 @@ require (
 	github.com/avast/retry-go/v4 v4.6.0
 	github.com/aws/aws-sdk-go-v2 v1.34.0
 	github.com/aws/aws-sdk-go-v2/config v1.29.2
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.74.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.75.0
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/lmittmann/tint v1.0.7
 	github.com/puzpuzpuz/xsync/v3 v3.5.0
