@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -37,9 +38,10 @@ type S3 struct {
 }
 
 type Uploader struct {
-	Directory  string   `json:"directory" yaml:"directory"`
-	Extensions []string `json:"extensions" yaml:"extensions"`
-	Local      Local    `json:"local" yaml:"local"`
+	Directory  string        `json:"directory" yaml:"directory"`
+	Extensions []string      `json:"extensions" yaml:"extensions"`
+	Local      Local         `json:"local" yaml:"local"`
+	Delay      time.Duration `json:"delay" yaml:"delay"`
 }
 
 type Local struct {
@@ -66,6 +68,7 @@ const (
 
 	keyUploaderDirectory      = "uploader.directory"
 	keyUploaderExtensions     = "uploader.extensions"
+	keyUploaderDelay          = "uploader.delay"
 	keyUploaderLocalDirectory = "uploader.local.directory"
 )
 

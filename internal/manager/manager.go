@@ -170,6 +170,12 @@ func (u *Manager) uploadCallback(path string) {
 		}
 		slog.Info("added to local directory", "path", path)
 
+		if u.config.Uploader.Delay > 0 {
+			slog.Debug("delaying for", "delay", u.config.Uploader.Delay)
+			time.Sleep(u.config.Uploader.Delay)
+			slog.Debug("delay complete")
+		}
+
 		err = os.Remove(srcFile)
 		if err != nil {
 			slog.Error("failed to remove file from source directory", "path", path, "error", err)
@@ -181,6 +187,13 @@ func (u *Manager) uploadCallback(path string) {
 		return
 	}
 	slog.Info("uploaded", "path", path)
+
+	if u.config.Uploader.Delay > 0 {
+		slog.Debug("delaying for", "delay", u.config.Uploader.Delay)
+		time.Sleep(u.config.Uploader.Delay)
+		slog.Debug("delay complete")
+	}
+
 	// File uploaded successfully, remove it
 	err = os.Remove(path)
 	if err != nil {
