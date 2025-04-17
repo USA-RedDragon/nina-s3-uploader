@@ -55,6 +55,18 @@ func runRoot(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("config validation failed: %w", err)
 	}
 
+	if _, err := os.Stat(cfg.Uploader.Directory); os.IsNotExist(err) {
+		os.MkdirAll(cfg.Uploader.Directory, os.ModePerm)
+	} else if err != nil {
+		return fmt.Errorf("failed to check uploader directory: %w", err)
+	}
+
+	if _, err := os.Stat(cfg.Uploader.Local.Directory); os.IsNotExist(err) {
+		os.MkdirAll(cfg.Uploader.Local.Directory, os.ModePerm)
+	} else if err != nil {
+		return fmt.Errorf("failed to check local directory: %w", err)
+	}
+
 	manager, err := manager.NewManager(cfg)
 	if err != nil {
 		return fmt.Errorf("failed to create manager: %w", err)
