@@ -41,15 +41,6 @@ func NewUploader(cfg *config.Config) (*Uploader, error) {
 		o.PartSize = 16 * 1024 * 1024 // 16MB
 		o.LeavePartsOnError = false
 		o.Concurrency = 5
-		o.ClientOptions = []func(*s3.Options){
-			func(c *s3.Options) {
-				c.Region = cfg.S3.Region
-				if cfg.S3.Endpoint != "" {
-					c.BaseEndpoint = aws.String(cfg.S3.Endpoint)
-					c.UsePathStyle = true
-				}
-			},
-		}
 	})
 
 	return ret, nil
