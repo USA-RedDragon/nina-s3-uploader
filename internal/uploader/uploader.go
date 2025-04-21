@@ -3,7 +3,6 @@ package uploader
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"sync"
 
 	"github.com/USA-RedDragon/nina-s3-uploader/internal/config"
@@ -32,7 +31,6 @@ func NewUploader(cfg *config.Config) (*Uploader, error) {
 		s3Client: s3.NewFromConfig(awsCfg, func(o *s3.Options) {
 			o.Region = cfg.S3.Region
 			if cfg.S3.Endpoint != "" {
-				slog.Warn("using custom S3 endpoint", "endpoint", cfg.S3.Endpoint)
 				o.BaseEndpoint = aws.String(cfg.S3.Endpoint)
 				o.UsePathStyle = true
 			}
@@ -47,7 +45,6 @@ func NewUploader(cfg *config.Config) (*Uploader, error) {
 			func(c *s3.Options) {
 				c.Region = cfg.S3.Region
 				if cfg.S3.Endpoint != "" {
-					slog.Warn("using custom S3 endpoint", "endpoint", cfg.S3.Endpoint)
 					c.BaseEndpoint = aws.String(cfg.S3.Endpoint)
 					c.UsePathStyle = true
 				}
