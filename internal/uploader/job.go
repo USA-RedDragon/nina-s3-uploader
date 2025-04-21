@@ -1,7 +1,6 @@
 package uploader
 
 import (
-	"bufio"
 	"context"
 	"log/slog"
 	"os"
@@ -41,7 +40,7 @@ func (u *uploadJob) Run() error {
 	_, err = u.s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket: aws.String(u.config.S3.Bucket),
 		Key:    aws.String(u.config.S3.Prefix + u.path),
-		Body:   bufio.NewReader(file),
+		Body:   file,
 	})
 	if err != nil {
 		slog.Error("failed to upload file", "path", u.path, "error", err)
