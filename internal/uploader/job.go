@@ -1,7 +1,6 @@
 package uploader
 
 import (
-	"bufio"
 	"context"
 	"log/slog"
 	"os"
@@ -10,21 +9,18 @@ import (
 
 	"github.com/USA-RedDragon/nina-s3-uploader/internal/config"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 type uploadJob struct {
-	path     string
-	s3Client *s3.Client
-	config   *config.Config
+	path      string
+	s3Client  *s3.Client
+	s3Manager *manager.Uploader
+	config    *config.Config
 }
 
 func (u *uploadJob) Run() error {
-	stats, err := os.Stat(u.path)
-	if err != nil {
-		slog.Error("failed to stat file", "path", u.path, "error", err)
-		return err
-	}
 	file, err := os.Open(u.path)
 	if err != nil {
 		slog.Error("failed to open file", "path", u.path, "error", err)
@@ -43,11 +39,10 @@ func (u *uploadJob) Run() error {
 	u.path = strings.ReplaceAll(u.path, "\\", "/")
 
 	slog.Debug("uploading file", "path", u.path, "bucket", u.config.S3.Bucket, "prefix", u.config.S3.Prefix)
-	_, err = u.s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket:        aws.String(u.config.S3.Bucket),
-		Key:           aws.String(u.config.S3.Prefix + u.path),
-		Body:          bufio.NewReader(file),
-		ContentLength: aws.Int64(stats.Size()),
+	_, err = u.s3Manager.Upload(context.TODO(), &s3.PutObjectInput{
+		Bucket: aws.String(u.config.S3.Bucket),
+		Key:    aws.String(u.config.S3.Prefix + u.path),
+		Body:   file,
 	})
 	if err != nil {
 		slog.Error("failed to upload file", "path", u.path, "error", err)
