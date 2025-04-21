@@ -1,6 +1,7 @@
 package uploader
 
 import (
+	"bufio"
 	"context"
 	"log/slog"
 	"os"
@@ -19,6 +20,11 @@ type uploadJob struct {
 }
 
 func (u *uploadJob) Run() error {
+	stats, err := os.Stat(u.path)
+	if err != nil {
+		slog.Error("failed to stat file", "path", u.path, "error", err)
+		return err
+	}
 	file, err := os.Open(u.path)
 	if err != nil {
 		slog.Error("failed to open file", "path", u.path, "error", err)
@@ -38,9 +44,10 @@ func (u *uploadJob) Run() error {
 
 	slog.Debug("uploading file", "path", u.path, "bucket", u.config.S3.Bucket, "prefix", u.config.S3.Prefix)
 	_, err = u.s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String(u.config.S3.Bucket),
-		Key:    aws.String(u.config.S3.Prefix + u.path),
-		Body:   file,
+		Bucket:        aws.String(u.config.S3.Bucket),
+		Key:           aws.String(u.config.S3.Prefix + u.path),
+		Body:          bufio.NewReader(file),
+		ContentLength: aws.Int64(stats.Size()),
 	})
 	if err != nil {
 		slog.Error("failed to upload file", "path", u.path, "error", err)
