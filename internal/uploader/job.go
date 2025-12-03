@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -37,11 +38,12 @@ func (u *uploadJob) Run() error {
 	}
 
 	u.path = strings.ReplaceAll(u.path, "\\", "/")
+	key := strings.TrimPrefix(path.Join(u.config.S3.Prefix, u.path), "/")
 
 	slog.Debug("uploading file", "path", u.path, "bucket", u.config.S3.Bucket, "prefix", u.config.S3.Prefix)
 	_, err = u.s3Manager.Upload(context.TODO(), &s3.PutObjectInput{
 		Bucket: aws.String(u.config.S3.Bucket),
-		Key:    aws.String(u.config.S3.Prefix + u.path),
+		Key:    aws.String(key),
 		Body:   file,
 	})
 	if err != nil {
@@ -49,7 +51,7 @@ func (u *uploadJob) Run() error {
 		return err
 	} else {
 		err = s3.NewObjectExistsWaiter(u.s3Client).Wait(
-			context.TODO(), &s3.HeadObjectInput{Bucket: aws.String(u.config.S3.Bucket), Key: aws.String(u.config.S3.Prefix + u.path)}, time.Minute)
+			context.TODO(), &s3.HeadObjectInput{Bucket: aws.String(u.config.S3.Bucket), Key: aws.String(key)}, time.Minute)
 		if err != nil {
 			slog.Error("failed to wait for object to exist", "path", u.path, "error", err)
 			return err
