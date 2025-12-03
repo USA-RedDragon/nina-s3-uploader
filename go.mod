@@ -1,6 +1,6 @@
 module github.com/USA-RedDragon/nina-s3-uploader
 
-go 1.23.6
+go 1.24.0
 
 require (
 	github.com/avast/retry-go/v4 v4.6.0
@@ -14,7 +14,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.6
 	github.com/ztrue/shutdown v0.1.1
-	golang.org/x/sync v0.11.0
+	golang.org/x/sync v0.18.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
