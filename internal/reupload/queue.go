@@ -3,7 +3,7 @@ package reupload
 import (
 	"github.com/USA-RedDragon/nina-s3-uploader/internal/config"
 	"github.com/USA-RedDragon/nina-s3-uploader/internal/uploader"
-	"github.com/puzpuzpuz/xsync/v3"
+	"github.com/puzpuzpuz/xsync/v4"
 	"golang.org/x/sync/errgroup"
 )
 
