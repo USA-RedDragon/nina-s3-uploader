@@ -4,7 +4,7 @@ go 1.27
 
 require (
 	github.com/USA-RedDragon/configulator/v2 v2.5.0
-	github.com/avast/retry-go/v4 v4.6.0
+	github.com/avast/retry-go/v4 v4.7.0
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/config v1.29.14
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.72
@@ -37,7 +37,6 @@ require (
 	github.com/aws/smithy-go v1.22.2 // indirect
 	github.com/dave/jennifer v1.7.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/stretchr/testify v1.10.0 // indirect
 	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/tools v0.51.0 // indirect
