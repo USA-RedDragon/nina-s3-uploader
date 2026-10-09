@@ -66,3 +66,24 @@ func TestFileWrittenIsUploaded(t *testing.T) {
 	}
 	expectUpload(t, uploads, filepath.Join(src, "light.fits"))
 }
+
+func TestDirectoryMovedInIsUploaded(t *testing.T) {
+	t.Parallel()
+	src, staging, uploads := startWatcher(t)
+	night := filepath.Join(staging, "night")
+	if err := os.Mkdir(night, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(night, "light.fits"), []byte("data"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Rename(night, filepath.Join(src, "night")); err != nil {
+		t.Fatal(err)
+	}
+	expectUpload(t, uploads, filepath.Join(src, "night", "light.fits"))
+
+	if err := os.WriteFile(filepath.Join(src, "night", "dark.fits"), []byte("data"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	expectUpload(t, uploads, filepath.Join(src, "night", "dark.fits"))
+}

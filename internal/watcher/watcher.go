@@ -70,7 +70,7 @@ func (u *Watcher) Stop() error {
 }
 
 func (u *Watcher) Add(path string) error {
-	dirs, err := walkdir(u.config.Uploader.Directory)
+	dirs, err := walkdir(path)
 	if err != nil {
 		return fmt.Errorf("failed to walk directory: %w", err)
 	}
@@ -119,7 +119,11 @@ func (u *Watcher) processEvent(event fsnotify.Event) {
 			return
 		}
 		if fstat.IsDir() {
-			u.Add(event.Name)
+			if err := u.Add(event.Name); err != nil {
+				slog.Error("failed to watch new directory", "path", event.Name, "error", err)
+				return
+			}
+			u.queueExisting(event.Name)
 		} else {
 			// This is probably a new file, so we should upload it
 			if slices.Contains(u.config.Uploader.Extensions, filepath.Ext(event.Name)) {
@@ -139,6 +143,32 @@ func (u *Watcher) processEvent(event fsnotify.Event) {
 		// no-op, the watch list is automatically updated when a file is renamed
 	case fsnotify.Chmod:
 		// no-op, we don't care about file permissions
+	}
+}
+
+// queueExisting debounces the matching files already in dir, which were
+// written before dir was watched.
+func (u *Watcher) queueExisting(dir string) {
+	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			for _, badDir := range BadDirs {
+				if badDir.MatchString(d.Name()) {
+					return filepath.SkipDir
+				}
+			}
+			return nil
+		}
+		if slices.Contains(u.config.Uploader.Extensions, filepath.Ext(path)) {
+			slog.Info("new file", "path", path)
+			u.debounce(path, u.callback)
+		}
+		return nil
+	})
+	if err != nil {
+		slog.Error("failed to scan new directory", "path", dir, "error", err)
 	}
 }
 
