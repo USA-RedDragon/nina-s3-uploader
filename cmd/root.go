@@ -29,6 +29,11 @@ func NewCommand(version, commit string) *cobra.Command {
 	loader := config.NewLoader()
 	cpflag.Bind(loader, cmd.Flags(), config.ConfigPFlagHooks(), nil)
 	cmd.RunE = func(cmd *cobra.Command, _ []string) error {
+		if path, ok := os.LookupEnv("CONFIG"); ok && !cmd.Flags().Changed("config") {
+			if err := cmd.Flags().Set("config", path); err != nil {
+				return fmt.Errorf("failed to set config path: %w", err)
+			}
+		}
 		return runRoot(cmd, loader)
 	}
 	return cmd

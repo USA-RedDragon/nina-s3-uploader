@@ -8,7 +8,7 @@ On Windows, I use this with WinFsp MemFs (particularly <https://github.com/Ceiri
 
 ## Configuration
 
-The uploader reads `config.yaml` from the working directory if it exists, or the file passed with `--config`/`-c`. [`config.example.yaml`](config.example.yaml) lists every option. Environment variables override the file and flags override both. List values such as `uploader.extensions` are comma-separated in an environment variable (`UPLOADER__EXTENSIONS=.fits,.xisf`) and repeated or comma-separated on the command line. AWS credentials come from the usual AWS environment variables or shared config files.
+The uploader reads `config.yaml` from the working directory if it exists, or the file passed with `--config`/`-c` or the `CONFIG` environment variable. [`config.example.yaml`](config.example.yaml) lists every option. Environment variables override the file and flags override both. List values such as `uploader.extensions` are comma-separated in an environment variable (`UPLOADER__EXTENSIONS=.fits,.xisf`) and repeated or comma-separated on the command line. AWS credentials come from the usual AWS environment variables or shared config files.
 
 <!-- configulator:begin -->
 
