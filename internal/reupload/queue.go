@@ -9,20 +9,20 @@ import (
 
 type ReuploadQueue struct {
 	config    *config.Config
-	reuploads *xsync.MapOf[string, reuploadJob]
+	reuploads *xsync.MapOf[string, *reuploadJob]
 	uploader  *uploader.Uploader
 }
 
 func NewReuploadQueue(config *config.Config, uploader *uploader.Uploader) *ReuploadQueue {
 	return &ReuploadQueue{
 		config:    config,
-		reuploads: xsync.NewMapOf[string, reuploadJob](),
+		reuploads: xsync.NewMapOf[string, *reuploadJob](),
 		uploader:  uploader,
 	}
 }
 
 func (r *ReuploadQueue) Add(path string) {
-	job, loaded := r.reuploads.LoadOrStore(path, reuploadJob{path: path, uploader: r.uploader})
+	job, loaded := r.reuploads.LoadOrStore(path, newReuploadJob(path, r.uploader))
 	if !loaded {
 		go job.Run(r.callback)
 	}
@@ -34,7 +34,7 @@ func (r *ReuploadQueue) callback(path string) {
 
 func (r *ReuploadQueue) Stop() error {
 	errgroup := errgroup.Group{}
-	r.reuploads.Range(func(key string, value reuploadJob) bool {
+	r.reuploads.Range(func(key string, value *reuploadJob) bool {
 		errgroup.Go(value.Stop)
 		return true
 	})
