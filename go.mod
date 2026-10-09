@@ -13,7 +13,7 @@ require (
 	github.com/goccy/go-yaml v1.19.2
 	github.com/lmittmann/tint v1.0.7
 	github.com/puzpuzpuz/xsync/v3 v3.5.1
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/ztrue/shutdown v0.1.1
 	golang.org/x/sync v0.23.0
