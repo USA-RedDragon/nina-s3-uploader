@@ -2,9 +2,11 @@ package uploader
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -28,16 +30,14 @@ func (u *uploadJob) Run() error {
 		return err
 	}
 	defer file.Close()
-	if strings.HasPrefix(u.path, u.config.Uploader.Local.Directory) {
-		u.path = strings.TrimPrefix(u.path, u.config.Uploader.Local.Directory)
-	} else if strings.HasPrefix(u.path, u.config.Uploader.Directory) {
-		u.path = strings.TrimPrefix(u.path, u.config.Uploader.Directory)
-	} else {
-		slog.Error("file path does not match local or source directory", "path", u.path)
-		return nil
+	rel, ok := relativeTo(u.config.Uploader.Local.Directory, u.path)
+	if !ok {
+		rel, ok = relativeTo(u.config.Uploader.Directory, u.path)
 	}
-
-	u.path = strings.ReplaceAll(u.path, "\\", "/")
+	if !ok {
+		return fmt.Errorf("%s is not in the local or source directory", u.path)
+	}
+	u.path = strings.ReplaceAll(rel, "\\", "/")
 	key := strings.TrimPrefix(path.Join(u.config.S3.Prefix, u.path), "/")
 
 	slog.Debug("uploading file", "path", u.path, "bucket", u.config.S3.Bucket, "prefix", u.config.S3.Prefix)
@@ -59,4 +59,21 @@ func (u *uploadJob) Run() error {
 	}
 	slog.Debug("uploaded file", "path", u.path, "bucket", u.config.S3.Bucket, "prefix", u.config.S3.Prefix)
 	return nil
+}
+
+// relativeTo returns path relative to dir, and false if path is not inside dir.
+func relativeTo(dir, path string) (string, bool) {
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		return "", false
+	}
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return "", false
+	}
+	rel, err := filepath.Rel(absDir, absPath)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", false
+	}
+	return rel, true
 }
