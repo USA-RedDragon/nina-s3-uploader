@@ -142,12 +142,13 @@ func (u *Watcher) processEvent(event fsnotify.Event) {
 func walkdir(dir string) ([]string, error) {
 	var dirs []string
 	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
-		if d.IsDir() {
-			if err != nil && !os.IsPermission(err) {
-				return err
-			} else if os.IsPermission(err) {
+		if err != nil {
+			if os.IsPermission(err) {
 				return filepath.SkipDir
 			}
+			return err
+		}
+		if d.IsDir() {
 			for _, badDir := range BadDirs {
 				if badDir.MatchString(d.Name()) {
 					return filepath.SkipDir
