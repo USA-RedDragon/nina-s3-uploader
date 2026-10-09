@@ -1,4 +1,4 @@
-cmd/root.go	53	17
+cmd/root.go	56	19
 internal/config/config.go	4	4
 internal/manager/manager.go	170	21
 internal/reupload/job.go	26	20
