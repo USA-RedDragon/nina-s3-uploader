@@ -1,5 +1,7 @@
 # N.I.N.A. S3 Uploader
 
+[![coverage](https://raw.githubusercontent.com/USA-RedDragon/nina-s3-uploader/main/.github/badges/coverage.svg)](https://github.com/USA-RedDragon/nina-s3-uploader/actions)
+
 This project is a simple Go program that will watch for files in a directory and upload them to an S3 bucket. It is designed to be used with the [N.I.N.A.](https://nighttime-imaging.eu/) astrophotography software, but can be used with any software that can save files to a directory.
 
 On Windows, I use this with WinFsp MemFs (particularly <https://github.com/Ceiridge/WinFsp-MemFs-Extended>) to create a virtual drive that N.I.N.A. can save files to. This program watches that directory and uploads the files to S3. This allows me to use a much smaller disk and prevents excessive writes as my system is deployed at a remote observatory.
