@@ -23,7 +23,7 @@ type Watcher struct {
 
 var BadDirs = []*regexp.Regexp{
 	regexp.MustCompile("System Volume Information(\\.*)?"),
-	regexp.MustCompile("lost+found(/.*)?"),
+	regexp.MustCompile(`lost\+found(/.*)?`),
 	regexp.MustCompile("\\$RECYCLE.BIN(\\.*)?"),
 }
 
