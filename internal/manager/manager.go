@@ -1,7 +1,6 @@
 package manager
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -221,42 +220,23 @@ func copyFile(src, dst string) error {
 	}
 	defer source.Close()
 
-	// Check if the destination file exists
-	// and if it does, remove it
-	if _, err := os.Stat(dst); errors.Is(err, os.ErrNotExist) {
-		err = os.Remove(dst)
-		if err != nil {
-			slog.Error("failed to remove existing file", "path", dst, "error", err)
-		}
-	}
-
 	destination, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer destination.Close()
-
-	buf := make([]byte, 1024)
-	for {
-		n, err := source.Read(buf)
-		if err != nil && err != io.EOF {
-			removeErr := os.Remove(dst)
-			if removeErr != nil {
-				slog.Error("failed to cleanup failed copy", "path", dst, "error", removeErr)
-			}
-			return err
+	_, err = io.Copy(destination, source)
+	if err == nil {
+		err = destination.Sync()
+	}
+	if closeErr := destination.Close(); err == nil {
+		err = closeErr
+	}
+	if err != nil {
+		removeErr := os.Remove(dst)
+		if removeErr != nil {
+			slog.Error("failed to cleanup failed copy", "path", dst, "error", removeErr)
 		}
-		if n == 0 {
-			break
-		}
-
-		if _, err := destination.Write(buf[:n]); err != nil {
-			removeErr := os.Remove(dst)
-			if removeErr != nil {
-				slog.Error("failed to cleanup failed copy", "path", dst, "error", removeErr)
-			}
-			return err
-		}
+		return err
 	}
 	return nil
 }
