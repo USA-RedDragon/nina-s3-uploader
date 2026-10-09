@@ -60,8 +60,6 @@ func configApplyDefaults(cfg *Config, _ string, set configulator.SetOrigin) erro
 	set("s3.region", configulator.LayerDefault, "default tag")
 	cfg.S3.Prefix = "/"
 	set("s3.prefix", configulator.LayerDefault, "default tag")
-	cfg.S3.Endpoint = "s3.amazonaws.com"
-	set("s3.endpoint", configulator.LayerDefault, "default tag")
 	return nil
 }
 
@@ -217,7 +215,7 @@ func configRegisterPFlags(fs *pflag.FlagSet, o *cpflag.Options) error {
 	fs.String(names[1], "us-east-1", "The region to use")
 	fs.String(names[2], "", "The bucket to upload to")
 	fs.String(names[3], "/", "The prefix to use for the uploaded files")
-	fs.String(names[4], "s3.amazonaws.com", "The endpoint to use")
+	fs.String(names[4], "", "A custom S3-compatible endpoint URL, such as https://minio.example.com. Empty uses AWS")
 	fs.String(names[5], "", "The directory to watch for new files")
 	fs.StringSlice(names[6], nil, "The file extensions to watch for, such as .fits. Comma-separated in an environment variable")
 	fs.String(names[7], "", "Files are only stored here if they fail to upload to S3. Once a file uploads at a later time, it is deleted from this directory")

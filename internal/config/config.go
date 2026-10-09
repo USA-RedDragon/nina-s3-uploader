@@ -32,7 +32,7 @@ type S3 struct {
 	Region   string `name:"region" default:"us-east-1" description:"The region to use"`
 	Bucket   string `name:"bucket" required:"true" description:"The bucket to upload to"`
 	Prefix   string `name:"prefix" default:"/" description:"The prefix to use for the uploaded files"`
-	Endpoint string `name:"endpoint" default:"s3.amazonaws.com" description:"The endpoint to use"`
+	Endpoint string `name:"endpoint" description:"A custom S3-compatible endpoint URL, such as https://minio.example.com. Empty uses AWS"`
 }
 
 // Uploader configures which files are uploaded and where failed uploads are kept.
