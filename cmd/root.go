@@ -37,6 +37,11 @@ func runRoot(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
+	err = cfg.Validate()
+	if err != nil {
+		return fmt.Errorf("config validation failed: %w", err)
+	}
+
 	var logger *slog.Logger
 	switch cfg.LogLevel {
 	case config.LogLevelDebug:
@@ -49,11 +54,6 @@ func runRoot(cmd *cobra.Command, _ []string) error {
 		logger = slog.New(tint.NewHandler(os.Stderr, &tint.Options{Level: slog.LevelError}))
 	}
 	slog.SetDefault(logger)
-
-	err = cfg.Validate()
-	if err != nil {
-		return fmt.Errorf("config validation failed: %w", err)
-	}
 
 	if _, err := os.Stat(cfg.Uploader.Directory); os.IsNotExist(err) {
 		os.MkdirAll(cfg.Uploader.Directory, os.ModePerm)
