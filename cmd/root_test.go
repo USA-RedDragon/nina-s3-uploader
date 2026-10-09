@@ -9,7 +9,7 @@ import (
 )
 
 func TestInvalidLogLevelIsAnError(t *testing.T) {
-	t.Chdir(t.TempDir())
+	t.Parallel()
 	c := cmd.NewCommand("test", "test")
 	c.SetArgs([]string{
 		"--log-level", "bogus",

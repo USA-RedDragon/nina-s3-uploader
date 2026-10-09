@@ -14,6 +14,17 @@ import (
 	"github.com/spf13/pflag"
 )
 
+const (
+	bucket    = "bucket"
+	srcDir    = "/src"
+	fits      = ".fits"
+	localDir  = "/local"
+	envBucket = "S3__BUCKET"
+	envDir    = "UPLOADER__DIRECTORY"
+	envExts   = "UPLOADER__EXTENSIONS"
+	envLocal  = "UPLOADER__LOCAL__DIRECTORY"
+)
+
 func load(t *testing.T, env map[string]string, args ...string) (*config.Config, error) {
 	t.Helper()
 	loader := config.NewLoader().WithEnviron(func(k string) (string, bool) {
@@ -36,7 +47,7 @@ func want(t *testing.T, cfg *config.Config) {
 	if cfg.S3.Region != "eu-west-1" {
 		t.Errorf("s3.region = %q", cfg.S3.Region)
 	}
-	if cfg.S3.Bucket != "bucket" {
+	if cfg.S3.Bucket != bucket {
 		t.Errorf("s3.bucket = %q", cfg.S3.Bucket)
 	}
 	if cfg.S3.Prefix != "astro/" {
@@ -45,16 +56,16 @@ func want(t *testing.T, cfg *config.Config) {
 	if cfg.S3.Endpoint != "http://minio:9000" {
 		t.Errorf("s3.endpoint = %q", cfg.S3.Endpoint)
 	}
-	if cfg.Uploader.Directory != "/src" {
+	if cfg.Uploader.Directory != srcDir {
 		t.Errorf("uploader.directory = %q", cfg.Uploader.Directory)
 	}
-	if !slices.Equal(cfg.Uploader.Extensions, []string{".fits", ".xisf"}) {
+	if !slices.Equal(cfg.Uploader.Extensions, []string{fits, ".xisf"}) {
 		t.Errorf("uploader.extensions = %q", cfg.Uploader.Extensions)
 	}
 	if cfg.Uploader.Delay != 90*time.Second {
 		t.Errorf("uploader.delay = %v", cfg.Uploader.Delay)
 	}
-	if cfg.Uploader.Local.Directory != "/local" {
+	if cfg.Uploader.Local.Directory != localDir {
 		t.Errorf("uploader.local.directory = %q", cfg.Uploader.Local.Directory)
 	}
 }
@@ -62,15 +73,15 @@ func want(t *testing.T, cfg *config.Config) {
 func TestEveryFieldFromEnv(t *testing.T) {
 	t.Parallel()
 	cfg, err := load(t, map[string]string{
-		"LOG_LEVEL":                  "debug",
-		"S3__REGION":                 "eu-west-1",
-		"S3__BUCKET":                 "bucket",
-		"S3__PREFIX":                 "astro/",
-		"S3__ENDPOINT":               "http://minio:9000",
-		"UPLOADER__DIRECTORY":        "/src",
-		"UPLOADER__EXTENSIONS":       ".fits,.xisf",
-		"UPLOADER__DELAY":            "1m30s",
-		"UPLOADER__LOCAL__DIRECTORY": "/local",
+		"LOG_LEVEL":       "debug",
+		"S3__REGION":      "eu-west-1",
+		envBucket:         bucket,
+		"S3__PREFIX":      "astro/",
+		"S3__ENDPOINT":    "http://minio:9000",
+		envDir:            srcDir,
+		envExts:           ".fits,.xisf",
+		"UPLOADER__DELAY": "1m30s",
+		envLocal:          localDir,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -83,14 +94,14 @@ func TestEveryFieldFromFlags(t *testing.T) {
 	cfg, err := load(t, nil,
 		"--log-level", "debug",
 		"--s3.region", "eu-west-1",
-		"--s3.bucket", "bucket",
+		"--s3.bucket", bucket,
 		"--s3.prefix", "astro/",
 		"--s3.endpoint", "http://minio:9000",
-		"--uploader.directory", "/src",
-		"--uploader.extensions", ".fits",
+		"--uploader.directory", srcDir,
+		"--uploader.extensions", fits,
 		"--uploader.extensions", ".xisf",
 		"--uploader.delay", "1m30s",
-		"--uploader.local.directory", "/local",
+		"--uploader.local.directory", localDir,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -101,10 +112,10 @@ func TestEveryFieldFromFlags(t *testing.T) {
 func TestFlagsOverrideEnv(t *testing.T) {
 	t.Parallel()
 	cfg, err := load(t, map[string]string{
-		"S3__BUCKET":                 "env",
-		"UPLOADER__DIRECTORY":        "/src",
-		"UPLOADER__EXTENSIONS":       ".fits",
-		"UPLOADER__LOCAL__DIRECTORY": "/local",
+		envBucket: "env",
+		envDir:    srcDir,
+		envExts:   fits,
+		envLocal:  localDir,
 	}, "--s3.bucket", "flag")
 	if err != nil {
 		t.Fatal(err)
@@ -145,10 +156,10 @@ uploader:
 func TestDefaults(t *testing.T) {
 	t.Parallel()
 	cfg, err := load(t, map[string]string{
-		"S3__BUCKET":                 "bucket",
-		"UPLOADER__DIRECTORY":        "/src",
-		"UPLOADER__EXTENSIONS":       ".fits",
-		"UPLOADER__LOCAL__DIRECTORY": "/local",
+		envBucket: bucket,
+		envDir:    srcDir,
+		envExts:   fits,
+		envLocal:  localDir,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -170,10 +181,10 @@ func TestMissingExplicitConfigFile(t *testing.T) {
 func TestRequiredFields(t *testing.T) {
 	t.Parallel()
 	full := map[string]string{
-		"s3.bucket":                "S3__BUCKET",
-		"uploader.directory":       "UPLOADER__DIRECTORY",
-		"uploader.extensions":      "UPLOADER__EXTENSIONS",
-		"uploader.local.directory": "UPLOADER__LOCAL__DIRECTORY",
+		"s3.bucket":                envBucket,
+		"uploader.directory":       envDir,
+		"uploader.extensions":      envExts,
+		"uploader.local.directory": envLocal,
 	}
 	for key := range full {
 		t.Run(key, func(t *testing.T) {
@@ -196,18 +207,18 @@ func TestRequiredFields(t *testing.T) {
 func TestInvalidLogLevel(t *testing.T) {
 	t.Parallel()
 	_, err := load(t, map[string]string{
-		"LOG_LEVEL":                  "verbose",
-		"S3__BUCKET":                 "bucket",
-		"UPLOADER__DIRECTORY":        "/src",
-		"UPLOADER__EXTENSIONS":       ".fits",
-		"UPLOADER__LOCAL__DIRECTORY": "/local",
+		"LOG_LEVEL": "verbose",
+		envBucket:   bucket,
+		envDir:      srcDir,
+		envExts:     fits,
+		envLocal:    localDir,
 	})
 	if !errors.Is(err, config.ErrInvalidLogLevel) {
 		t.Fatalf("expected ErrInvalidLogLevel, got %v", err)
 	}
 }
 
-func TestOldExampleConfigLoadsFromSearchPath(t *testing.T) {
+func TestOldExampleConfigLoadsFromSearchPath(t *testing.T) { //nolint:paralleltest // changes the working directory
 	dir := t.TempDir()
 	err := os.WriteFile(filepath.Join(dir, "config.yaml"), []byte(`# Log configuration, one of debug, info, warn, error
 log-level: info
@@ -234,7 +245,7 @@ uploader:
 		t.Fatal(err)
 	}
 	if cfg.S3.Bucket != "YOUR_BUCKET_NAME" || cfg.Uploader.Directory != `R:\` ||
-		cfg.Uploader.Local.Directory != `C:\Users\your\directory` || !slices.Equal(cfg.Uploader.Extensions, []string{".fits"}) {
+		cfg.Uploader.Local.Directory != `C:\Users\your\directory` || !slices.Equal(cfg.Uploader.Extensions, []string{fits}) {
 		t.Errorf("unexpected config: %+v", cfg)
 	}
 }

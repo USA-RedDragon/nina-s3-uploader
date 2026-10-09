@@ -3,7 +3,7 @@ package reupload
 import (
 	"context"
 	"log/slog"
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"sync"
 	"time"
@@ -29,7 +29,7 @@ func newReuploadJob(path string, uploader *uploader.Uploader) *reuploadJob {
 	}
 }
 
-func (r *reuploadJob) Run(callback func(path string)) error {
+func (r *reuploadJob) Run(callback func(path string)) {
 	defer func() {
 		close(r.done)
 		callback(r.path)
@@ -37,7 +37,7 @@ func (r *reuploadJob) Run(callback func(path string)) error {
 	for {
 		select {
 		case <-r.stop:
-			return nil
+			return
 		default:
 		}
 		err := r.uploader.Upload(r.path)
@@ -46,20 +46,18 @@ func (r *reuploadJob) Run(callback func(path string)) error {
 		}
 		slog.Warn("retrying upload", "attempt", r.attempts+1, "path", r.path, "error", err)
 		r.attempts++
-		randomJitter := time.Duration(rand.Intn(5))*time.Minute + time.Duration(rand.Intn(60))*time.Second
+		randomJitter := rand.N(5 * time.Minute).Truncate(time.Second) //nolint:gosec // retry jitter, not security sensitive
 		slog.Debug("sleeping before retrying", "duration", randomJitter)
 		select {
 		case <-r.stop:
-			return nil
+			return
 		case <-time.After(randomJitter):
 		}
 	}
 	err := os.Remove(r.path)
 	if err != nil {
 		slog.Error("failed to remove file from local directory", "path", r.path, "error", err)
-		return err
 	}
-	return nil
 }
 
 func (r *reuploadJob) Stop() error {

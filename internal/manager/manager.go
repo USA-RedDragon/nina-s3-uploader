@@ -23,7 +23,7 @@ type Manager struct {
 	srcWatcher    *watcher.Watcher
 	localWatcher  *watcher.Watcher
 	uploader      *uploader.Uploader
-	reuploadQueue *reupload.ReuploadQueue
+	reuploadQueue *reupload.Queue
 }
 
 func NewManager(cfg *config.Config) (*Manager, error) {
@@ -39,7 +39,7 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create source watcher: %w", err)
 	}
-	reuploadQueue := reupload.NewReuploadQueue(cfg, uploader)
+	reuploadQueue := reupload.NewQueue(cfg, uploader)
 
 	manager := &Manager{
 		config:        cfg,
@@ -49,8 +49,6 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 		localWatcher:  localWatcher,
 	}
 
-	// TODO: walk the local directory and startup reupload jobs for each file
-	// TODO: walk the source directory and upload each file
 	foundFiles := findFiles(cfg.Uploader.Local.Directory, cfg.Uploader.Extensions)
 	for _, file := range foundFiles {
 		slog.Info("found file in local directory", "path", file)
@@ -71,7 +69,10 @@ func (u *Manager) Start() error {
 	if err != nil {
 		return fmt.Errorf("failed to add directory to watcher: %w", err)
 	}
-	go u.srcWatcher.Start()
+	go func() {
+		err := u.srcWatcher.Start()
+		slog.Debug("source watcher stopped", "error", err)
+	}()
 	return nil
 }
 
@@ -160,7 +161,11 @@ func (u *Manager) uploadCallback(path string) {
 		slog.Debug("want to write to local directory", "path", path, "localPath", localPath)
 
 		// Create dir tree in local directory
-		os.MkdirAll(filepath.Dir(localPath), fs.FileMode(0755))
+		err = os.MkdirAll(filepath.Dir(localPath), fs.FileMode(0755))
+		if err != nil {
+			slog.Error("failed to create local directory", "path", path, "error", err)
+			return
+		}
 
 		srcFile := filepath.Join(u.config.Uploader.Directory, path)
 
@@ -249,10 +254,8 @@ func findFiles(path string, extensions []string) []string {
 		} else if os.IsPermission(err) {
 			return filepath.SkipDir
 		}
-		for _, badDir := range watcher.BadDirs {
-			if badDir.MatchString(path) {
-				return filepath.SkipDir
-			}
+		if watcher.IsBadDir(path) {
+			return filepath.SkipDir
 		}
 		if !info.IsDir() && slices.Contains(extensions, filepath.Ext(path)) {
 			files = append(files, path)

@@ -11,13 +11,7 @@ import (
 func TestBadDirsMatchSystemDirectories(t *testing.T) {
 	t.Parallel()
 	for _, name := range []string{"System Volume Information", "lost+found", "$RECYCLE.BIN"} {
-		matched := false
-		for _, re := range watcher.BadDirs {
-			if re.MatchString(name) {
-				matched = true
-			}
-		}
-		if !matched {
+		if !watcher.IsBadDir(name) {
 			t.Errorf("%q is not skipped", name)
 		}
 	}

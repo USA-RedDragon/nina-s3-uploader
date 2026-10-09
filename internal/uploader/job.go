@@ -49,13 +49,12 @@ func (u *uploadJob) Run() error {
 	if err != nil {
 		slog.Error("failed to upload file", "path", u.path, "error", err)
 		return err
-	} else {
-		err = s3.NewObjectExistsWaiter(u.s3Client).Wait(
-			context.TODO(), &s3.HeadObjectInput{Bucket: aws.String(u.config.S3.Bucket), Key: aws.String(key)}, time.Minute)
-		if err != nil {
-			slog.Error("failed to wait for object to exist", "path", u.path, "error", err)
-			return err
-		}
+	}
+	err = s3.NewObjectExistsWaiter(u.s3Client).Wait(
+		context.TODO(), &s3.HeadObjectInput{Bucket: aws.String(u.config.S3.Bucket), Key: aws.String(key)}, time.Minute)
+	if err != nil {
+		slog.Error("failed to wait for object to exist", "path", u.path, "error", err)
+		return err
 	}
 	slog.Debug("uploaded file", "path", u.path, "bucket", u.config.S3.Bucket, "prefix", u.config.S3.Prefix)
 	return nil

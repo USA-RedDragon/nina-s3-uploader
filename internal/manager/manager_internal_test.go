@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestCopyFileLogsNoErrors(t *testing.T) {
+func TestCopyFileLogsNoErrors(t *testing.T) { //nolint:paralleltest // replaces the default logger
 	var logs bytes.Buffer
 	prev := slog.Default()
 	slog.SetDefault(slog.New(slog.NewTextHandler(&logs, &slog.HandlerOptions{Level: slog.LevelError})))

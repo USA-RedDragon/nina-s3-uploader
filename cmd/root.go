@@ -55,16 +55,12 @@ func runRoot(cmd *cobra.Command, loader *configulator.Configulator[config.Config
 	}
 	slog.SetDefault(logger)
 
-	if _, err := os.Stat(cfg.Uploader.Directory); os.IsNotExist(err) {
-		os.MkdirAll(cfg.Uploader.Directory, os.ModePerm)
-	} else if err != nil {
-		return fmt.Errorf("failed to check uploader directory: %w", err)
+	if err := os.MkdirAll(cfg.Uploader.Directory, os.ModePerm); err != nil {
+		return fmt.Errorf("failed to create uploader directory: %w", err)
 	}
 
-	if _, err := os.Stat(cfg.Uploader.Local.Directory); os.IsNotExist(err) {
-		os.MkdirAll(cfg.Uploader.Local.Directory, os.ModePerm)
-	} else if err != nil {
-		return fmt.Errorf("failed to check local directory: %w", err)
+	if err := os.MkdirAll(cfg.Uploader.Local.Directory, os.ModePerm); err != nil {
+		return fmt.Errorf("failed to create local directory: %w", err)
 	}
 
 	manager, err := manager.NewManager(cfg)

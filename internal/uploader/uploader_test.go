@@ -52,10 +52,6 @@ func (f *fakeS3) keys() []string {
 
 func newUploader(t *testing.T, dir, local string) (*uploader.Uploader, *fakeS3) {
 	t.Helper()
-	t.Setenv("AWS_ACCESS_KEY_ID", "id")
-	t.Setenv("AWS_SECRET_ACCESS_KEY", "secret")
-	t.Setenv("AWS_CONFIG_FILE", "/nonexistent")
-	t.Setenv("AWS_SHARED_CREDENTIALS_FILE", "/nonexistent")
 	fake := &fakeS3{objects: map[string]string{}}
 	srv := httptest.NewServer(fake)
 	t.Cleanup(srv.Close)
@@ -98,6 +94,10 @@ func expectKeys(t *testing.T, fake *fakeS3, want ...string) {
 }
 
 func TestUploadWithDotSlashDirectory(t *testing.T) {
+	t.Setenv("AWS_ACCESS_KEY_ID", "id")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "secret")
+	t.Setenv("AWS_CONFIG_FILE", "/nonexistent")
+	t.Setenv("AWS_SHARED_CREDENTIALS_FILE", "/nonexistent")
 	t.Chdir(t.TempDir())
 	u, fake := newUploader(t, "./src", "./local")
 	writeFile(t, filepath.Join("src", "night", "light.fits"))
@@ -108,6 +108,10 @@ func TestUploadWithDotSlashDirectory(t *testing.T) {
 }
 
 func TestUploadAbsolutePathWithRelativeLocalDirectory(t *testing.T) {
+	t.Setenv("AWS_ACCESS_KEY_ID", "id")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "secret")
+	t.Setenv("AWS_CONFIG_FILE", "/nonexistent")
+	t.Setenv("AWS_SHARED_CREDENTIALS_FILE", "/nonexistent")
 	root := t.TempDir()
 	t.Chdir(root)
 	u, fake := newUploader(t, "src", "local")
@@ -120,6 +124,10 @@ func TestUploadAbsolutePathWithRelativeLocalDirectory(t *testing.T) {
 }
 
 func TestUploadDoesNotMatchSiblingDirectoryPrefix(t *testing.T) {
+	t.Setenv("AWS_ACCESS_KEY_ID", "id")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "secret")
+	t.Setenv("AWS_CONFIG_FILE", "/nonexistent")
+	t.Setenv("AWS_SHARED_CREDENTIALS_FILE", "/nonexistent")
 	root := t.TempDir()
 	u, fake := newUploader(t, filepath.Join(root, "data2"), filepath.Join(root, "data"))
 	path := filepath.Join(root, "data2", "light.fits")
@@ -131,6 +139,10 @@ func TestUploadDoesNotMatchSiblingDirectoryPrefix(t *testing.T) {
 }
 
 func TestUploadOutsideDirectoriesFails(t *testing.T) {
+	t.Setenv("AWS_ACCESS_KEY_ID", "id")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "secret")
+	t.Setenv("AWS_CONFIG_FILE", "/nonexistent")
+	t.Setenv("AWS_SHARED_CREDENTIALS_FILE", "/nonexistent")
 	root := t.TempDir()
 	u, fake := newUploader(t, filepath.Join(root, "src"), filepath.Join(root, "local"))
 	path := filepath.Join(root, "elsewhere", "light.fits")

@@ -16,7 +16,6 @@ type Uploader struct {
 	config    *config.Config
 	s3Client  *s3.Client
 	s3Manager *manager.Uploader
-	upload    *uploadJob
 	lock      sync.Mutex
 }
 
@@ -50,20 +49,14 @@ func (u *Uploader) Upload(path string) error {
 	u.lock.Lock()
 	defer u.lock.Unlock()
 
-	if u.upload == nil {
-		u.upload = &uploadJob{
-			path:      path,
-			s3Client:  u.s3Client,
-			config:    u.config,
-			s3Manager: u.s3Manager,
-		}
-		err := u.upload.Run()
-		u.upload = nil
-		if err != nil {
-			return fmt.Errorf("failed to upload file: %w", err)
-		}
-		return nil
-	} else {
-		return fmt.Errorf("upload already in progress")
+	job := &uploadJob{
+		path:      path,
+		s3Client:  u.s3Client,
+		config:    u.config,
+		s3Manager: u.s3Manager,
 	}
+	if err := job.Run(); err != nil {
+		return fmt.Errorf("failed to upload file: %w", err)
+	}
+	return nil
 }

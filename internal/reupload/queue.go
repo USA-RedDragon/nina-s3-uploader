@@ -7,34 +7,34 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type ReuploadQueue struct {
+type Queue struct {
 	config    *config.Config
 	reuploads *xsync.MapOf[string, *reuploadJob]
 	uploader  *uploader.Uploader
 }
 
-func NewReuploadQueue(config *config.Config, uploader *uploader.Uploader) *ReuploadQueue {
-	return &ReuploadQueue{
+func NewQueue(config *config.Config, uploader *uploader.Uploader) *Queue {
+	return &Queue{
 		config:    config,
 		reuploads: xsync.NewMapOf[string, *reuploadJob](),
 		uploader:  uploader,
 	}
 }
 
-func (r *ReuploadQueue) Add(path string) {
+func (r *Queue) Add(path string) {
 	job, loaded := r.reuploads.LoadOrStore(path, newReuploadJob(path, r.uploader))
 	if !loaded {
 		go job.Run(r.callback)
 	}
 }
 
-func (r *ReuploadQueue) callback(path string) {
+func (r *Queue) callback(path string) {
 	r.reuploads.Delete(path)
 }
 
-func (r *ReuploadQueue) Stop() error {
+func (r *Queue) Stop() error {
 	errgroup := errgroup.Group{}
-	r.reuploads.Range(func(key string, value *reuploadJob) bool {
+	r.reuploads.Range(func(_ string, value *reuploadJob) bool {
 		errgroup.Go(value.Stop)
 		return true
 	})

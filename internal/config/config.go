@@ -48,7 +48,7 @@ type Local struct {
 	Directory string `name:"directory" required:"true" description:"Files are only stored here if they fail to upload to S3. Once a file uploads at a later time, it is deleted from this directory"`
 }
 
-var ErrInvalidLogLevel = errors.New("Invalid log level")
+var ErrInvalidLogLevel = errors.New("invalid log level")
 
 // NewLoader returns a configulator that reads config.yaml if it exists and
 // environment variables such as S3__BUCKET. Bind flags to it before loading.

@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"regexp"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/USA-RedDragon/nina-s3-uploader/internal/config"
@@ -22,10 +22,14 @@ type Watcher struct {
 	quiet     time.Duration
 }
 
-var BadDirs = []*regexp.Regexp{
-	regexp.MustCompile("System Volume Information(\\.*)?"),
-	regexp.MustCompile(`lost\+found(/.*)?`),
-	regexp.MustCompile("\\$RECYCLE.BIN(\\.*)?"),
+// IsBadDir reports whether path is or is inside a filesystem's system directory.
+func IsBadDir(path string) bool {
+	for _, name := range [...]string{"System Volume Information", "lost+found", "$RECYCLE.BIN"} {
+		if strings.Contains(path, name) {
+			return true
+		}
+	}
+	return false
 }
 
 type UploadCallback func(path string)
@@ -124,12 +128,9 @@ func (u *Watcher) processEvent(event fsnotify.Event) {
 				return
 			}
 			u.queueExisting(event.Name)
-		} else {
-			// This is probably a new file, so we should upload it
-			if slices.Contains(u.config.Uploader.Extensions, filepath.Ext(event.Name)) {
-				slog.Info("new file", "path", event.Name)
-				u.debounce(event.Name, u.callback)
-			}
+		} else if slices.Contains(u.config.Uploader.Extensions, filepath.Ext(event.Name)) {
+			slog.Info("new file", "path", event.Name)
+			u.debounce(event.Name, u.callback)
 		}
 	case fsnotify.Write:
 		slog.Info("modified", "path", event.Name)
@@ -154,10 +155,8 @@ func (u *Watcher) queueExisting(dir string) {
 			return err
 		}
 		if d.IsDir() {
-			for _, badDir := range BadDirs {
-				if badDir.MatchString(d.Name()) {
-					return filepath.SkipDir
-				}
+			if IsBadDir(d.Name()) {
+				return filepath.SkipDir
 			}
 			return nil
 		}
@@ -182,10 +181,8 @@ func walkdir(dir string) ([]string, error) {
 			return err
 		}
 		if d.IsDir() {
-			for _, badDir := range BadDirs {
-				if badDir.MatchString(d.Name()) {
-					return filepath.SkipDir
-				}
+			if IsBadDir(d.Name()) {
+				return filepath.SkipDir
 			}
 			dirs = append(dirs, path)
 		}

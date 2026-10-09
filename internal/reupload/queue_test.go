@@ -27,7 +27,7 @@ func TestStopStopsRunningJobs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	q := reupload.NewReuploadQueue(cfg, u)
+	q := reupload.NewQueue(cfg, u)
 	q.Add(filepath.Join(root, "local", "missing.fits"))
 	time.Sleep(100 * time.Millisecond)
 
