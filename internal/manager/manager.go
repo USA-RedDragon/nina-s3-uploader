@@ -28,6 +28,10 @@ type Manager struct {
 }
 
 func NewManager(cfg *config.Config) (*Manager, error) {
+	uploader, err := uploader.NewUploader(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create uploader: %w", err)
+	}
 	localWatcher, err := watcher.NewWatcher(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create local watcher: %w", err)
@@ -36,7 +40,6 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create source watcher: %w", err)
 	}
-	uploader, err := uploader.NewUploader(cfg)
 	reuploadQueue := reupload.NewReuploadQueue(cfg, uploader)
 
 	manager := &Manager{
