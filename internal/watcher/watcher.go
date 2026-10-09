@@ -19,6 +19,7 @@ type Watcher struct {
 	fsWatcher *fsnotify.Watcher
 	callback  UploadCallback
 	debounces *xsync.MapOf[string, time.Time]
+	quiet     time.Duration
 }
 
 var BadDirs = []*regexp.Regexp{
@@ -38,6 +39,7 @@ func NewWatcher(cfg *config.Config) (*Watcher, error) {
 		config:    cfg,
 		fsWatcher: watcher,
 		debounces: xsync.NewMapOf[string, time.Time](),
+		quiet:     5 * time.Second,
 	}, nil
 }
 
@@ -94,12 +96,12 @@ func (u *Watcher) debounce(path string, callback UploadCallback) {
 	}
 	go func() {
 		for {
-			if time.Since(t) > 5*time.Second {
+			if time.Since(t) > u.quiet {
 				u.debounces.Delete(path)
 				callback(path)
 				break
 			}
-			time.Sleep(1 * time.Second)
+			time.Sleep(u.quiet / 5)
 			t, ok = u.debounces.Load(path)
 			if !ok {
 				break
@@ -122,6 +124,7 @@ func (u *Watcher) processEvent(event fsnotify.Event) {
 			// This is probably a new file, so we should upload it
 			if slices.Contains(u.config.Uploader.Extensions, filepath.Ext(event.Name)) {
 				slog.Info("new file", "path", event.Name)
+				u.debounce(event.Name, u.callback)
 			}
 		}
 	case fsnotify.Write:
