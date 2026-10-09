@@ -1,17 +1,14 @@
 package config
 
 import (
-	"context"
 	"errors"
-	"fmt"
-	"os"
-	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"gopkg.in/yaml.v3"
+	"github.com/USA-RedDragon/configulator/v2"
+	"github.com/goccy/go-yaml"
 )
+
+//go:generate go tool configulator -type Config
 
 type LogLevel string
 
@@ -24,154 +21,51 @@ const (
 
 // Config stores the application configuration.
 type Config struct {
-	LogLevel LogLevel `json:"log-level" yaml:"log-level"`
+	LogLevel LogLevel `name:"log-level" default:"info" description:"Log level, one of debug, info, warn or error"`
 
-	S3       S3       `json:"s3" yaml:"s3"`
-	Uploader Uploader `json:"uploader" yaml:"uploader"`
+	S3       S3       `name:"s3"`
+	Uploader Uploader `name:"uploader"`
 }
 
+// S3 configures the bucket files are uploaded to.
 type S3 struct {
-	Region   string `json:"region" yaml:"region"`
-	Bucket   string `json:"bucket" yaml:"bucket"`
-	Prefix   string `json:"prefix" yaml:"prefix"`
-	Endpoint string `json:"endpoint" yaml:"endpoint"`
+	Region   string `name:"region" default:"us-east-1" description:"The region to use"`
+	Bucket   string `name:"bucket" required:"true" description:"The bucket to upload to"`
+	Prefix   string `name:"prefix" default:"/" description:"The prefix to use for the uploaded files"`
+	Endpoint string `name:"endpoint" default:"s3.amazonaws.com" description:"The endpoint to use"`
 }
 
+// Uploader configures which files are uploaded and where failed uploads are kept.
 type Uploader struct {
-	Directory  string        `json:"directory" yaml:"directory"`
-	Extensions []string      `json:"extensions" yaml:"extensions"`
-	Local      Local         `json:"local" yaml:"local"`
-	Delay      time.Duration `json:"delay" yaml:"delay"`
+	Directory  string        `name:"directory" required:"true" description:"The directory to watch for new files"`
+	Extensions []string      `name:"extensions" required:"true" description:"The file extensions to watch for, such as .fits. Comma-separated in an environment variable"`
+	Local      Local         `name:"local"`
+	Delay      time.Duration `name:"delay" description:"How long to wait after a file is uploaded or moved to the local directory before removing it from the watched directory"`
 }
 
+// Local configures where files are kept when they fail to upload.
 type Local struct {
-	Directory string `json:"directory" yaml:"directory"`
+	Directory string `name:"directory" required:"true" description:"Files are only stored here if they fail to upload to S3. Once a file uploads at a later time, it is deleted from this directory"`
 }
 
-const (
-	defaultConfigPath = "config.yaml"
-	defaultLogLevel   = LogLevelInfo
+var ErrInvalidLogLevel = errors.New("Invalid log level")
 
-	defaultS3Region   = "us-east-1"
-	defaultS3Prefix   = "/"
-	defaultS3Endpoint = "s3.amazonaws.com"
-)
-
-const (
-	keyConfigFile = "config"
-	keyLogLevel   = "log-level"
-
-	keyS3Region   = "s3.region"
-	keyS3Bucket   = "s3.bucket"
-	keyS3Prefix   = "s3.prefix"
-	keyS3Endpoint = "s3.endpoint"
-
-	keyUploaderDirectory      = "uploader.directory"
-	keyUploaderExtensions     = "uploader.extensions"
-	keyUploaderDelay          = "uploader.delay"
-	keyUploaderLocalDirectory = "uploader.local.directory"
-)
-
-var (
-	ErrInvalidLogLevel           = errors.New("Invalid log level")
-	ErrMissingS3Bucket           = errors.New("Missing S3 bucket")
-	ErrMissingUploaderDirectory  = errors.New("Missing uploader directory")
-	ErrMissingUploaderExtensions = errors.New("Missing uploader extensions")
-	ErrMissingUploaderLocalDir   = errors.New("Missing uploader local directory")
-)
-
-func LoadConfig(cmd *cobra.Command) (*Config, error) {
-	var config Config
-
-	// Load flags from envs
-	ctx, cancel := context.WithCancelCause(cmd.Context())
-	cmd.Flags().VisitAll(func(f *pflag.Flag) {
-		if ctx.Err() != nil {
-			return
-		}
-		optName := strings.ReplaceAll(strings.ReplaceAll(strings.ToUpper(f.Name), "-", "_"), ".", "__")
-		if val, ok := os.LookupEnv(optName); !f.Changed && ok {
-			if err := f.Value.Set(val); err != nil {
-				cancel(err)
-			}
-			f.Changed = true
-		}
-	})
-	if ctx.Err() != nil {
-		return &config, fmt.Errorf("failed to load env: %w", context.Cause(ctx))
-	}
-
-	configPath, err := cmd.Flags().GetString("config")
-	if err != nil {
-		return &config, fmt.Errorf("failed to get config path: %w", err)
-	}
-	if configPath != "" {
-		data, err := os.ReadFile(configPath)
-		if err != nil && !errors.Is(err, os.ErrNotExist) {
-			return &config, fmt.Errorf("failed to read config: %w", err)
-		} else if err == nil {
-			if err := yaml.Unmarshal(data, &config); err != nil {
-				return &config, fmt.Errorf("failed to unmarshal config: %w", err)
-			}
-		}
-	}
-
-	err = overrideFlags(&config, cmd)
-	if err != nil {
-		return &config, fmt.Errorf("failed to override flags: %w", err)
-	}
-
-	// Defaults
-	if config.LogLevel == "" {
-		config.LogLevel = defaultLogLevel
-	}
-	if config.S3.Region == "" {
-		config.S3.Region = defaultS3Region
-	}
-	if config.S3.Prefix == "" {
-		config.S3.Prefix = defaultS3Prefix
-	}
-	if config.S3.Endpoint == "" {
-		config.S3.Endpoint = defaultS3Endpoint
-	}
-
-	return &config, nil
+// NewLoader returns a configulator that reads config.yaml if it exists and
+// environment variables such as S3__BUCKET. Bind flags to it before loading.
+func NewLoader() *configulator.Configulator[Config] {
+	return configulator.New(ConfigSchema()).
+		WithEnvironmentVariables(&configulator.EnvironmentVariableOptions{Separator: "__"}).
+		WithFile(&configulator.FileOptions{
+			Search:   []string{"config.yaml"},
+			Decoders: configulator.Decoders{".yaml": yaml.Unmarshal, ".yml": yaml.Unmarshal},
+		})
 }
 
-func RegisterFlags(cmd *cobra.Command) {
-	cmd.Flags().StringP(keyConfigFile, "c", defaultConfigPath, "Config file path")
-	cmd.Flags().String(keyLogLevel, string(defaultLogLevel), "Log level")
-}
-
-func overrideFlags(config *Config, cmd *cobra.Command) error {
-	if cmd.Flags().Changed(keyLogLevel) {
-		ll, err := cmd.Flags().GetString(keyLogLevel)
-		if err != nil {
-			return fmt.Errorf("failed to get log level: %w", err)
-		}
-		config.LogLevel = LogLevel(ll)
-	}
-
-	return nil
-}
-
-func (c *Config) Validate() error {
+func (c Config) Validate() error {
 	switch c.LogLevel {
 	case LogLevelDebug, LogLevelInfo, LogLevelWarn, LogLevelError:
 	default:
 		return ErrInvalidLogLevel
-	}
-	if c.S3.Bucket == "" {
-		return ErrMissingS3Bucket
-	}
-	if c.Uploader.Directory == "" {
-		return ErrMissingUploaderDirectory
-	}
-	if len(c.Uploader.Extensions) == 0 {
-		return ErrMissingUploaderExtensions
-	}
-	if c.Uploader.Local.Directory == "" {
-		return ErrMissingUploaderLocalDir
 	}
 
 	return nil

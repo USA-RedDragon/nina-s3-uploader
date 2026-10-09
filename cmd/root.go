@@ -6,6 +6,8 @@ import (
 	"os"
 	"syscall"
 
+	"github.com/USA-RedDragon/configulator/v2"
+	cpflag "github.com/USA-RedDragon/configulator/v2/flags/pflag"
 	"github.com/USA-RedDragon/nina-s3-uploader/internal/config"
 	"github.com/USA-RedDragon/nina-s3-uploader/internal/manager"
 	"github.com/lmittmann/tint"
@@ -21,25 +23,23 @@ func NewCommand(version, commit string) *cobra.Command {
 			"version": version,
 			"commit":  commit,
 		},
-		RunE:              runRoot,
 		SilenceErrors:     true,
 		DisableAutoGenTag: true,
 	}
-	config.RegisterFlags(cmd)
+	loader := config.NewLoader()
+	cpflag.Bind(loader, cmd.Flags(), config.ConfigPFlagHooks(), nil)
+	cmd.RunE = func(cmd *cobra.Command, _ []string) error {
+		return runRoot(cmd, loader)
+	}
 	return cmd
 }
 
-func runRoot(cmd *cobra.Command, _ []string) error {
+func runRoot(cmd *cobra.Command, loader *configulator.Configulator[config.Config]) error {
 	fmt.Printf("N.I.N.A S3 Uploader - %s (%s)\n", cmd.Annotations["version"], cmd.Annotations["commit"])
 
-	cfg, err := config.LoadConfig(cmd)
+	cfg, err := loader.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
-	}
-
-	err = cfg.Validate()
-	if err != nil {
-		return fmt.Errorf("config validation failed: %w", err)
 	}
 
 	var logger *slog.Logger
