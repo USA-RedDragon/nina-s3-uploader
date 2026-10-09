@@ -1,9 +1,9 @@
-cmd/root.go	56	19
+cmd/root.go	40	12
 internal/config/config.go	4	4
-internal/manager/manager.go	170	21
+internal/manager/manager.go	145	18
 internal/reupload/job.go	26	20
 internal/reupload/queue.go	10	10
-internal/uploader/job.go	38	32
-internal/uploader/uploader.go	27	27
+internal/uploader/job.go	33	27
+internal/uploader/uploader.go	19	19
 internal/watcher/watcher.go	86	72
 main.go	4	0
