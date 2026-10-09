@@ -40,7 +40,7 @@ type Uploader struct {
 	Directory  string        `name:"directory" required:"true" description:"The directory to watch for new files"`
 	Extensions []string      `name:"extensions" required:"true" description:"The file extensions to watch for, such as .fits. Comma-separated in an environment variable"`
 	Local      Local         `name:"local"`
-	Delay      time.Duration `name:"delay" description:"How long to wait after a file is uploaded or moved to the local directory before removing it from the watched directory"`
+	Delay      time.Duration `name:"delay" description:"How long to wait after a file is uploaded or moved to the local directory before removing it from the watched directory, such as 30s"`
 }
 
 // Local configures where files are kept when they fail to upload.

@@ -219,7 +219,7 @@ func configRegisterPFlags(fs *pflag.FlagSet, o *cpflag.Options) error {
 	fs.String(names[5], "", "The directory to watch for new files")
 	fs.StringSlice(names[6], nil, "The file extensions to watch for, such as .fits. Comma-separated in an environment variable")
 	fs.String(names[7], "", "Files are only stored here if they fail to upload to S3. Once a file uploads at a later time, it is deleted from this directory")
-	fs.Duration(names[8], 0, "How long to wait after a file is uploaded or moved to the local directory before removing it from the watched directory")
+	fs.Duration(names[8], 0, "How long to wait after a file is uploaded or moved to the local directory before removing it from the watched directory, such as 30s")
 	return nil
 }
 

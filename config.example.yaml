@@ -1,28 +1,22 @@
-# This is an example configuration file for the N.I.N.A S3 Uploader
-# Copy this file to config.yaml and modify it to suit your needs.
-
-# Log configuration, one of debug, info, warn, error
-log-level: info
-
+# Sample configuration
+# Log level, one of debug, info, warn or error
+log-level: "info"
 s3:
   # The region to use
-  region: us-east-1
+  region: "us-east-1"
   # The bucket to upload to
-  bucket: YOUR_BUCKET_NAME
+  # bucket: ""
   # The prefix to use for the uploaded files
-  prefix: /
-  # The endpoint to use
-  endpoint: https://s3.amazonaws.com
-
+  prefix: "/"
+  # A custom S3-compatible endpoint URL, such as https://minio.example.com. Empty uses AWS
+  # endpoint: ""
 uploader:
   # The directory to watch for new files
-  directory: R:\
-  # The file extensions to watch for
-  extensions:
-    - .fits
-
-  # Files are only stored locally if they fail to upload to S3
-  # If the file is successfully uploaded at a later time, it is
-  # deleted from the local directory
+  # directory: ""
+  # The file extensions to watch for, such as .fits. Comma-separated in an environment variable
+  # extensions: []
   local:
-    directory: C:\Users\your\directory
+    # Files are only stored here if they fail to upload to S3. Once a file uploads at a later time, it is deleted from this directory
+    # directory: ""
+  # How long to wait after a file is uploaded or moved to the local directory before removing it from the watched directory, such as 30s
+  # delay: "0s"
