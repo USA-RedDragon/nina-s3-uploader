@@ -2,6 +2,8 @@ package reupload
 
 import (
 	"context"
+	"errors"
+	"io/fs"
 	"log/slog"
 	"math/rand/v2"
 	"os"
@@ -43,6 +45,10 @@ func (r *reuploadJob) Run(callback func(path string)) {
 		err := r.uploader.Upload(r.path)
 		if err == nil {
 			break
+		}
+		if errors.Is(err, fs.ErrNotExist) {
+			slog.Error("dropping upload of missing file", "path", r.path, "attempts", r.attempts+1, "error", err)
+			return
 		}
 		slog.Warn("retrying upload", "attempt", r.attempts+1, "path", r.path, "error", err)
 		r.attempts++

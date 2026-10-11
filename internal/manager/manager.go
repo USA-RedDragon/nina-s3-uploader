@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -116,10 +117,15 @@ func (u *Manager) uploadCallback(path string) {
 		retry.Attempts(3),
 		retry.DelayType(retry.BackOffDelay),
 		retry.Delay(time.Second),
+		retry.RetryIf(func(err error) bool { return !errors.Is(err, fs.ErrNotExist) }),
 		retry.OnRetry(func(n uint, err error) {
 			slog.Warn("retrying upload", "attempt", n+1, "path", path, "error", err)
 		}),
 	)
+	if errors.Is(err, fs.ErrNotExist) {
+		slog.Error("dropping upload of missing file", "path", path, "error", err)
+		return
+	}
 	if err != nil {
 		slog.Error("failed to upload after 3 attempts", "path", path)
 
