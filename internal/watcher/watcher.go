@@ -11,7 +11,7 @@ import (
 
 	"github.com/USA-RedDragon/nina-s3-uploader/internal/config"
 	"github.com/fsnotify/fsnotify"
-	"github.com/puzpuzpuz/xsync/v3"
+	"github.com/puzpuzpuz/xsync/v4"
 )
 
 type Watcher struct {
