@@ -15,7 +15,7 @@ import (
 	"github.com/USA-RedDragon/nina-s3-uploader/internal/reupload"
 	"github.com/USA-RedDragon/nina-s3-uploader/internal/uploader"
 	"github.com/USA-RedDragon/nina-s3-uploader/internal/watcher"
-	"github.com/avast/retry-go/v4"
+	"github.com/avast/retry-go/v5"
 	"golang.org/x/sync/errgroup"
 )
 
