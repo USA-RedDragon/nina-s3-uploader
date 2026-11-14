@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Set up Go
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: go.mod
 
@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Set up Go
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: go.mod
 
@@ -60,7 +60,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: USA-RedDragon/reusable-actions/.github/workflows/coverage.yaml@c5ee15922a0ff4229b0f06a8d0551541b5cabfdc # v2.0.34
+    uses: USA-RedDragon/reusable-actions/.github/workflows/coverage.yaml@1e6b74c455cbbe8892acc7974fac5a1ac228ad47 # v2.0.38
     with:
       artifact: coverage
       file: coverage.out
